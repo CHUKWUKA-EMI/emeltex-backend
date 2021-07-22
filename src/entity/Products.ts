@@ -31,7 +31,7 @@ export class Product extends BaseEntity {
   @ManyToOne(() => Category, (category) => category.products)
   category: Category;
 
-  @OneToMany(() => Order, (order) => order.product)
+  @OneToMany(() => Order, (order) => order.product, { eager: true })
   orders: Order[];
 
   @CreateDateColumn()

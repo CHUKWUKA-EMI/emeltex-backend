@@ -17,7 +17,7 @@ class UserController {
         password: password,
         verified: false,
         image: "",
-        role: "user",
+        role: email === process.env.ADMIN_EMAIL ? "admin" : "user",
       });
       const errors = await validate(user);
       if (errors.length > 0) {
@@ -41,9 +41,10 @@ class UserController {
       return res.status(201).json({ user: userData, access_token: token });
     } catch (error) {
       console.log(error);
-      return res
-        .status(500)
-        .json({ message: "Oops! Something went wrong. Try again later" });
+      return res.status(500).json({
+        message: "Oops! Something went wrong. Try again later",
+        meta: error,
+      });
     }
   }
 
@@ -84,9 +85,13 @@ class UserController {
         return res.status(401).json({ message: "Please verify your email" });
       }
       //generate token
-      const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET!, {
-        expiresIn: "7d",
-      });
+      const token = jwt.sign(
+        { id: user.id, email: user.email, role: user.role },
+        process.env.JWT_SECRET!,
+        {
+          expiresIn: "7d",
+        }
+      );
       //assign token to response header
       res.header("Authorization", token);
 
@@ -101,9 +106,171 @@ class UserController {
       });
     } catch (error) {
       console.log(error);
-      return res
-        .status(500)
-        .json({ message: "Oops! Something went wrong. Try again later" });
+      return res.status(500).json({
+        message: "Oops! Something went wrong. Try again later",
+        meta: error,
+      });
+    }
+  }
+
+  async getAllUsers(req: Request, res: Response) {
+    if ((<any>req).user.role !== "admin") {
+      return res.status(403).json({
+        message:
+          "User does not have sufficient permission to access this route",
+      });
+    }
+    try {
+      const user = await User.findAndCount({
+        order: { createdAt: "ASC" },
+        cache: true,
+      });
+      const userData: User[] = [];
+
+      user[0].map((u) => {
+        delete (<any>u).password;
+        userData.push(u);
+      });
+      return res.status(200).json({ users: userData, count: user[1] });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        message: "Oops! Something went wrong. Try again later",
+        meta: error,
+      });
+    }
+  }
+
+  async currentUser(req: Request, res: Response) {
+    try {
+      const user = await User.findOne({
+        where: { email: (<any>req).user.email },
+      });
+      if (user) {
+        user.password = "";
+        return res.status(200).json({ user: user });
+      }
+      return res.status(404).json({ message: "User not found" });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        message: "Oops! Something went wrong. Try again later",
+        meta: error,
+      });
+    }
+  }
+
+  async getOneUser(req: Request, res: Response) {
+    const { id } = req.params;
+    if ((<any>req).user.role !== "admin") {
+      return res.status(403).json({
+        message:
+          "User does not have sufficient permission to access this route",
+      });
+    }
+
+    try {
+      const user = await User.findOne({ where: { id } });
+      if (user) {
+        user.password = "";
+        return res.status(200).json({ user: user });
+      }
+
+      return res.status(404).json({ message: "User not found" });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        message: "Oops! Something went wrong. Try again later",
+        meta: error,
+      });
+    }
+  }
+
+  async updateUser(req: Request, res: Response) {
+    const userId = (<any>req).user.id;
+    if (req.body.hasOwnProperty("password")) {
+      return res.status(403).json({
+        message:
+          "Password cannot be updated. Please remove password from payload",
+      });
+    }
+
+    try {
+      const update = await User.update(req.body, { id: userId });
+      if (update) {
+        return res.status(200).json({ message: "User updated successfully" });
+      }
+
+      return res.status(402).json({ message: "User update faailed" });
+    } catch (error) {
+      console.log(error);
+      console.log(error);
+      return res.status(500).json({
+        message: "Oops! Something went wrong. Try again later",
+        meta: error,
+      });
+    }
+  }
+
+  async resetPassword(req: Request, res: Response) {
+    const { email } = req.body;
+    const newPassword = "emeltexUser" + Math.random().toString().split(".")[1];
+    try {
+      const hashPass = await bcrypt.hash(newPassword, 10);
+      const user = await User.update({ password: hashPass }, { email });
+      if (user) {
+        const emailClass = new Email();
+        const message = `Your password has been reset. Your temporary password is ${newPassword}. Make sure you change it once you login.`;
+        await emailClass.sendEmail(email, "Password Reset", message);
+        return res.status(200).json({
+          message:
+            "Password reset successfully. Please check your email for your new password",
+        });
+      }
+      return res.status(402).json({ message: "Password reset failed" });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        message: "Oops! Something went wrong. Try again later",
+        meta: error,
+      });
+    }
+  }
+
+  async changePassword(req: Request, res: Response) {
+    const { oldPassword, newPassword } = req.body;
+    try {
+      const user = await User.findOne({
+        where: { email: (<any>req).user.email },
+      });
+      if (user) {
+        //compare passwords
+        const validPassword = await bcrypt.compare(oldPassword, user.password);
+        if (validPassword) {
+          const hashPass = await bcrypt.hash(newPassword, 10);
+
+          const update = await User.update(
+            { password: hashPass },
+            { email: user.email }
+          );
+          await user.hashPassword();
+          if (update) {
+            return res
+              .status(200)
+              .json({ message: "Password changed successfully" });
+          }
+          return res.status(402).json({ message: "Password change failed" });
+        }
+        return res.status(403).json({ message: "Old password is incorrect" });
+      }
+
+      return res.status(404).json({ message: "User not found" });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        message: "Oops! Something went wrong. Try again later",
+        meta: error,
+      });
     }
   }
 }

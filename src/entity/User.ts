@@ -55,10 +55,10 @@ export class User extends BaseEntity {
   @IsBoolean({ message: "Value must be a boolean" })
   verified: boolean;
 
-  @OneToMany(() => Order, (order) => order.user)
+  @OneToMany(() => Order, (order) => order.user, { eager: true })
   orders: Order[];
 
-  @OneToMany(() => Payments, (Payment) => Payment.user)
+  @OneToMany(() => Payments, (Payment) => Payment.user, { eager: true })
   payments: Payments[];
 
   @CreateDateColumn()

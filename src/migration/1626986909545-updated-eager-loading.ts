@@ -1,7 +1,7 @@
 import {MigrationInterface, QueryRunner} from "typeorm";
 
-export class updateSchema1626597429710 implements MigrationInterface {
-    name = 'updateSchema1626597429710'
+export class updatedEagerLoading1626986909545 implements MigrationInterface {
+    name = 'updatedEagerLoading1626986909545'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TABLE "payments" ("id" SERIAL NOT NULL, "title" character varying NOT NULL, "reference" character varying NOT NULL, "amount" double precision NOT NULL, "productName" character varying NOT NULL, "verified" boolean NOT NULL, "paystack_transaction_code" character varying NOT NULL, "paystack_authorization_url" character varying NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP NOT NULL DEFAULT now(), "userId" integer, CONSTRAINT "PK_197ab7af18c93fbb0c9b28b4a59" PRIMARY KEY ("id"))`);
