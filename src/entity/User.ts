@@ -18,6 +18,7 @@ import {
 } from "class-validator";
 import { Order } from "./Orders";
 import { Payments } from "./Payments";
+import { Cart } from "./Cart";
 import * as bcrypt from "bcryptjs";
 
 @Entity({ name: "users" })
@@ -55,11 +56,20 @@ export class User extends BaseEntity {
   @IsBoolean({ message: "Value must be a boolean" })
   verified: boolean;
 
-  @OneToMany(() => Order, (order) => order.user, { eager: true })
+  @OneToMany(() => Order, (order) => order.user, {
+    eager: true,
+    onDelete: "CASCADE",
+  })
   orders: Order[];
 
-  @OneToMany(() => Payments, (Payment) => Payment.user, { eager: true })
+  @OneToMany(() => Payments, (Payment) => Payment.user, {
+    eager: true,
+    onDelete: "CASCADE",
+  })
   payments: Payments[];
+
+  @OneToMany(() => Cart, (cart) => cart.user)
+  carts: Cart[];
 
   @CreateDateColumn()
   createdAt: Date;

@@ -11,6 +11,10 @@ const validate = (req: Request, res: Response, next: NextFunction) => {
     "/api/v1/user/activate-user/",
     "/api/v1/user/reset-password",
     "/api/v1/user/reset-password/",
+    "/api/v1/department/seed",
+    "/api/v1/department/seed/",
+    "/api/v1/category/seed",
+    "/api/v1/category/seed/",
   ];
   if (
     freePaths.includes(req.path) ||

@@ -6,28 +6,23 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
-  ManyToOne,
 } from "typeorm";
-import { Product } from "./Products";
-import { Department } from "./Department";
+import { Category } from "./Categories";
 
-@Entity({ name: "category" })
-export class Category extends BaseEntity {
+@Entity({ name: "department" })
+export class Department extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ type: "varchar" })
   name: string;
 
-  @OneToMany(() => Product, (product) => product.category, {
+  @OneToMany(() => Category, (category) => category.department, {
     eager: true,
     onDelete: "CASCADE",
     onUpdate: "CASCADE",
   })
-  products: Product[];
-
-  @ManyToOne(() => Department, (department) => department.categories)
-  department: Department;
+  categories: Category[];
 
   @CreateDateColumn()
   createdAt: Date;

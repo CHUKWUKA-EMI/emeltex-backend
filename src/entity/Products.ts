@@ -13,11 +13,14 @@ import { Order } from "./Orders";
 
 @Entity({ name: "product" })
 export class Product extends BaseEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
 
   @Column({ type: "varchar" })
   name: string;
+
+  @Column({ type: "text" })
+  description: string;
 
   @Column({ type: "varchar" })
   size: string;
@@ -26,7 +29,7 @@ export class Product extends BaseEntity {
   price: number;
 
   @Column({ type: "varchar" })
-  image: string;
+  imageUrl: string;
 
   @ManyToOne(() => Category, (category) => category.products)
   category: Category;
