@@ -69,7 +69,6 @@ class CategoryController {
           return res.status(400).json({ errors: errors });
         }
         await category.save();
-        await department.save();
         return res
           .status(201)
           .json({ message: "Category created successfully", category });

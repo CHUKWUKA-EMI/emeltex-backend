@@ -15,6 +15,8 @@ const validate = (req: Request, res: Response, next: NextFunction) => {
     "/api/v1/department/seed/",
     "/api/v1/category/seed",
     "/api/v1/category/seed/",
+    "/api/v1/products/seed",
+    "/api/v1/products/seed/",
   ];
   if (
     freePaths.includes(req.path) ||

@@ -4,7 +4,12 @@ import "reflect-metadata";
 import { createConnection } from "typeorm";
 import * as dotenv from "dotenv";
 import config from "../ormconfig";
-import { userRoutes, departmentRoutes, categoryRoutes } from "./routes";
+import {
+  userRoutes,
+  departmentRoutes,
+  categoryRoutes,
+  productRoutes,
+} from "./routes";
 import validate from "./middlewares/authenticate";
 // import { logger } from "./middlewares/logger";
 import * as chalk from "chalk";
@@ -28,6 +33,7 @@ createConnection(config)
     app.use("/api/v1/user", userRoutes);
     app.use("/api/v1/department", departmentRoutes);
     app.use("/api/v1/category", categoryRoutes);
+    app.use("/api/v1/products", productRoutes);
 
     const port = process.env.PORT || 5000;
 
