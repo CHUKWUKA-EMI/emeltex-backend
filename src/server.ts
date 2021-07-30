@@ -9,8 +9,9 @@ import {
   departmentRoutes,
   categoryRoutes,
   productRoutes,
+  orderRoutes,
 } from "./routes";
-import validate from "./middlewares/authenticate";
+import authenticate from "./middlewares/authenticate";
 // import { logger } from "./middlewares/logger";
 import * as chalk from "chalk";
 
@@ -27,13 +28,14 @@ createConnection(config)
 
     // app.use(logger);
 
-    app.use(validate);
+    app.use(authenticate);
 
     //ROUTES
     app.use("/api/v1/user", userRoutes);
     app.use("/api/v1/department", departmentRoutes);
     app.use("/api/v1/category", categoryRoutes);
     app.use("/api/v1/products", productRoutes);
+    app.use("/api/v1/orders", orderRoutes);
 
     const port = process.env.PORT || 5000;
 

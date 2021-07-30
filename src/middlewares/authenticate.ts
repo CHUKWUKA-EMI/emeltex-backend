@@ -1,7 +1,7 @@
 import * as jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 
-const validate = (req: Request, res: Response, next: NextFunction) => {
+const authenticate = (req: Request, res: Response, next: NextFunction) => {
   const freePaths = [
     "/api/v1/user/signup",
     "/api/v1/user/signup/",
@@ -38,4 +38,4 @@ const validate = (req: Request, res: Response, next: NextFunction) => {
   return next();
 };
 
-export default validate;
+export default authenticate;

@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { Product } from "../entity/Products";
 import { validate } from "class-validator";
 import { Category } from "../entity/Categories";
+import { Cart } from "../entity/Cart";
+import { User } from "../entity/User";
 import { getConnection } from "typeorm";
 
 interface ProductRequest {
@@ -193,6 +195,89 @@ class ProductController {
           .json({ message: "Product deleted successfully" });
       }
       return res.status(403).json({ message: "Product deletion failed" });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Oops! Something went wrong. Try again later",
+        meta: error,
+      });
+    }
+  }
+
+  //add a product to cart
+  async addToCart(req: Request, res: Response) {
+    const {
+      productId,
+      productName,
+      productPrice,
+      productQuantity,
+      productImage,
+      productDescription,
+      productSize,
+    } = req.body;
+    const userId = (<any>req).user.id;
+    try {
+      const user = await User.findOne({ where: { id: userId } });
+      const cart = Cart.create({
+        productId,
+        productName,
+        productDescription,
+        productPrice,
+        productImage,
+        productQuantity,
+        productSize,
+        user: user,
+      });
+
+      const errors = await validate(cart);
+      if (errors.length > 0) {
+        return res.status(400).json({ errors });
+      }
+
+      await cart.save();
+      return res.status(201).json({ message: "Product added to cart" });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Oops! Something went wrong. Try again later",
+        meta: error,
+      });
+    }
+  }
+
+  //DELETE product from Cart
+  async deleteFromCart(req: Request, res: Response) {
+    try {
+      const cart = await Cart.findOne({ where: { id: req.params.id } });
+      if (!cart)
+        return res
+          .status(404)
+          .json({ message: "Entry does not exist in cart" });
+
+      if (cart.user.id !== (<any>req).user.id) {
+        return res.status(403).json({
+          message: "You are not authorized to delete this product from cart.",
+        });
+      }
+      const deleted = await Cart.delete({ id: Number(req.params.id) });
+      if (deleted) {
+        return res.status(200).json({ message: "Product removed from cart" });
+      }
+
+      return res.status(401).json({
+        message: "Product could not be deleted from cart. Please retry.",
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Oops! Something went wrong. Try again later",
+        meta: error,
+      });
+    }
+  }
+
+  //GET Cart
+  async getCart(_: Request, res: Response) {
+    try {
+      const cart = await Cart.findAndCount();
+      return res.status(200).json({ carts: cart[0], count: cart[1] });
     } catch (error) {
       return res.status(500).json({
         message: "Oops! Something went wrong. Try again later",

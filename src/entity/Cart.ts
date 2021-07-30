@@ -16,6 +16,9 @@ export class Cart extends BaseEntity {
   id: number;
 
   @Column({ type: "varchar" })
+  productId: string;
+
+  @Column({ type: "varchar" })
   productName: string;
 
   @Column({ type: "varchar" })
