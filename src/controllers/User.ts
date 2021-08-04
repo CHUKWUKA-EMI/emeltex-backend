@@ -216,11 +216,13 @@ class UserController {
     const { email } = req.body;
     const newPassword = "emeltexUser" + Math.random().toString().split(".")[1];
     try {
-      const hashPass = await bcrypt.hash(newPassword, 10);
-      const user = await User.update({ password: hashPass }, { email });
+      const user = await User.findOne({ where: { email: email } });
       if (user) {
+        user.password = newPassword;
+        await user.hashPassword();
+        await user.save();
         const emailClass = new Email();
-        const message = `Your password has been reset. Your temporary password is ${newPassword}. Make sure you change it once you login.`;
+        const message = `Your password has been reset. Your temporary password is <b>${newPassword}</b>. Make sure you change it once you login.`;
         await emailClass.sendEmail(email, "Password Reset", message);
         return res.status(200).json({
           message:
@@ -247,19 +249,12 @@ class UserController {
         //compare passwords
         const validPassword = await bcrypt.compare(oldPassword, user.password);
         if (validPassword) {
-          const hashPass = await bcrypt.hash(newPassword, 10);
-
-          const update = await User.update(
-            { password: hashPass },
-            { email: user.email }
-          );
+          user.password = newPassword;
           await user.hashPassword();
-          if (update) {
-            return res
-              .status(200)
-              .json({ message: "Password changed successfully" });
-          }
-          return res.status(402).json({ message: "Password change failed" });
+          await user.save();
+          return res
+            .status(200)
+            .json({ message: "Password changed successfully" });
         }
         return res.status(403).json({ message: "Old password is incorrect" });
       }
